@@ -1,0 +1,6 @@
+{
+  "client_id": "hospital-emr-001",
+  "query": "Patient John Smith (SSN: 123-45-6789) was diagnosed with Type 2 Diabetes on 03/15/2024. His treating physician Dr. Sarah Johnson prescribed Metformin 500mg twice daily.",
+  "_expected_decision": "BLOCK",
+  "_reason": "Contains SSN (high-sensitivity PHI) which cannot be safely redacted"
+}

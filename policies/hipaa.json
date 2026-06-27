@@ -1,0 +1,45 @@
+{
+  "framework": "HIPAA",
+  "version": "1.0.0",
+  "phi_identifiers": [
+    "patient_name",
+    "ssn",
+    "dob",
+    "medical_record_number",
+    "diagnosis",
+    "prescription",
+    "doctor_name",
+    "address",
+    "phone",
+    "email",
+    "account_number",
+    "certificate_license",
+    "vehicle_id",
+    "device_id",
+    "url",
+    "ip_address",
+    "biometric",
+    "full_face_photo"
+  ],
+  "approved_models": [
+    "groq/openai-gpt-oss-120b",
+    "ollama/llama3.1"
+  ],
+  "blocked_models": [
+    "openai/gpt-4",
+    "anthropic/claude-3-opus",
+    "openai/gpt-4o"
+  ],
+  "redaction_strategy": "mask",
+  "redaction_placeholder": "[REDACTED-{TYPE}]",
+  "audit_required": true,
+  "enable_hindsight_memory": true,
+  "per_client_overrides_supported": true,
+  "agent_name": "Prime",
+  "project_name": "Sentinel AI",
+  "max_query_length": 10000,
+  "confidence_threshold": 0.7,
+  "escalation_threshold": 0.5,
+  "default_model": "groq/openai-gpt-oss-120b",
+  "fallback_model": "ollama/llama3.1"
+}

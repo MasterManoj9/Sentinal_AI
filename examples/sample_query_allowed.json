@@ -1,0 +1,6 @@
+{
+  "client_id": "clinic-portal-002",
+  "query": "What are the common side effects of Lisinopril for hypertension management?",
+  "_expected_decision": "ALLOW",
+  "_reason": "No PHI detected — generic medical question"
+}

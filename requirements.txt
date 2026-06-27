@@ -1,0 +1,11 @@
+# Sentinel AI — Requirements
+# Core dependencies for the Prime compliance gate agent
+
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+pydantic==2.11.3
+python-dotenv==1.1.0
+pytest==8.4.1
+httpx==0.28.1
+regex==2024.11.6
+groq==0.25.0
