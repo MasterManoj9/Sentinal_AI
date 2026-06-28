@@ -23,7 +23,7 @@
 </p>
 <h2 align="center" >## 🚀 Live Demo </h2>
 
-<h1 align="center">  https://sentinal-ai-a8ig.onrender.com/ </h1>
+<h3 align="center"> Application : https://sentinal-ai-a8ig.onrender.com/ </h3>
 
 ---
 
