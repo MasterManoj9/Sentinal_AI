@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinel AI | Prime Dashboard</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #07090e;
+            --glass-bg: rgba(20, 24, 38, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            
+            --accent-glow: #3b82f6;
+            --accent-purple: #8b5cf6;
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            
+            --status-allow: #10b981;
+            --status-redact: #f59e0b;
+            --status-block: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Spatial Background Orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            animation: float 20s infinite ease-in-out alternate;
+        }
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: rgba(59, 130, 246, 0.15);
+            top: -100px;
+            left: -100px;
+        }
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: rgba(139, 92, 246, 0.15);
+            bottom: -200px;
+            right: -100px;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(100px, 50px) rotate(10deg); }
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--glass-shadow);
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Intro Section */
+        .intro-section h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 4rem;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .intro-section h1 span {
+            background: linear-gradient(to right, var(--accent-glow), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .intro-section p {
+            font-size: 1.125rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 2rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .feature-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Dashboard Interface */
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: var(--status-allow);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background-color: var(--status-allow);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--status-allow);
+            animation: pulse-anim 2s infinite;
+        }
+
+        @keyframes pulse-anim {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Input Area */
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent-glow), var(--accent-purple));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Result Area */
+        .result-area {
+            margin-top: 2rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+            display: none;
+        }
+        
+        .result-area.active {
+            opacity: 1;
+            transform: translateY(0);
+            display: block;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 1rem;
+        }
+
+        .badge.ALLOW { background: rgba(16, 185, 129, 0.1); color: var(--status-allow); border: 1px solid var(--status-allow); }
+        .badge.REDACT { background: rgba(245, 158, 11, 0.1); color: var(--status-redact); border: 1px solid var(--status-redact); }
+        .badge.BLOCK { background: rgba(239, 68, 68, 0.1); color: var(--status-block); border: 1px solid var(--status-block); }
+
+        .terminal {
+            background: #0f111a;
+            border-radius: 12px;
+            padding: 1.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: #a6accd;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .terminal::-webkit-scrollbar {
+            width: 8px;
+        }
+        .terminal::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .terminal::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .loader {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Support Agent Chat Widget */
+        .chat-widget-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            background: linear-gradient(135deg, var(--accent-glow), var(--accent-purple));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .chat-widget-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .chat-window {
+            position: fixed;
+            bottom: 110px;
+            right: 30px;
+            width: 350px;
+            height: 450px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: var(--glass-shadow);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .chat-window.open {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+        
+        .chat-header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chat-header .dot {
+            width: 10px;
+            height: 10px;
+            background: var(--status-allow);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--status-allow);
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        
+        .message {
+            max-width: 85%;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .message.bot {
+            background: rgba(255, 255, 255, 0.05);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            color: #e2e8f0;
+        }
+        
+        .message.user {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(139, 92, 246, 0.4));
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        
+        .chat-input-area {
+            padding: 1rem;
+            border-top: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 0.6rem 1rem;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .chat-input:focus {
+            border-color: var(--accent-glow);
+        }
+        
+        .chat-send-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            background: var(--accent-glow);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: background 0.2s;
+        }
+        
+        .chat-send-btn:hover {
+            background: #2563eb;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 2rem 1rem;
+            }
+            .intro-section h1 { font-size: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Background -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="container">
+        <!-- Left: Intro Section -->
+        <div class="intro-section">
+            <h1>Meet <span>Prime</span></h1>
+            <p>
+                Sentinel AI is your enterprise compliance gatekeeper. Prime intercepts AI queries in real-time, 
+                detects regulated PHI/PII using advanced regex and LLM verification, and enforces strict routing policies.
+            </p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <div class="feature-title">Immutable Audit</div>
+                    <div class="feature-desc">Every block, redact, and allow decision is permanently logged.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <div class="feature-title">Cross-Session Memory</div>
+                    <div class="feature-desc">Powered by Hindsight to remember and adapt to past violations.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Cascade Routing</div>
+                    <div class="feature-desc">Dynamically routes safe queries to Groq or local Ollama models.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🕶️</div>
+                    <div class="feature-title">Smart Redaction</div>
+                    <div class="feature-desc">Masks sensitive entities before they ever reach the LLM.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Spatial Dashboard -->
+        <div class="glass-panel">
+            <div class="dashboard-header">
+                <div>
+                    <h2 style="font-family: 'Outfit'; font-weight: 600;">Live Intercept Gate</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Submit a query to test Prime's enforcement</p>
+                </div>
+                <div class="status-indicator">
+                    <div class="pulse"></div>
+                    SYSTEM ONLINE
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>USER QUERY</label>
+                <textarea id="queryInput" placeholder="Try entering a medical question or a social security number (e.g., 'My SSN is 123-45-6789 and I need medicine')..."></textarea>
+            </div>
+
+            <button id="submitBtn" onclick="submitQuery()">
+                <span id="btnText">Execute Query</span>
+                <div id="btnLoader" class="loader"></div>
+            </button>
+
+            <!-- Results -->
+            <div id="resultArea" class="result-area">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div id="decisionBadge" class="badge ALLOW">ALLOW</div>
+                    <div id="latencyMetric" style="font-family: 'JetBrains Mono'; font-size: 0.75rem; color: var(--text-muted);">0ms</div>
+                </div>
+                
+                <div class="terminal" id="terminalOutput">
+                    // Output will appear here...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Agent Widget -->
+    <div class="chat-widget-btn" id="chatBtn" onclick="toggleChat()">
+        💬
+    </div>
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <div class="dot"></div>
+            Support Agent
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">Hello! I'm the Sentinel AI support agent. How can I help you with our course policies or features today?</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything..." onkeypress="handleChatKeypress(event)">
+            <button class="chat-send-btn" onclick="sendChatMessage()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        async function submitQuery() {
+            const input = document.getElementById('queryInput').value;
+            if (!input.trim()) return;
+
+            // UI Loading State
+            const btnText = document.getElementById('btnText');
+            const btnLoader = document.getElementById('btnLoader');
+            const submitBtn = document.getElementById('submitBtn');
+            const resultArea = document.getElementById('resultArea');
+            const terminalOutput = document.getElementById('terminalOutput');
+            const decisionBadge = document.getElementById('decisionBadge');
+            const latencyMetric = document.getElementById('latencyMetric');
+
+            btnText.style.display = 'none';
+            btnLoader.style.display = 'block';
+            submitBtn.style.opacity = '0.7';
+            submitBtn.disabled = true;
+            resultArea.classList.remove('active');
+
+            try {
+                // Determine base URL dynamically (handles both local and deployed scenarios)
+                const baseUrl = window.location.origin;
+                
+                const response = await fetch(`${baseUrl}/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        client_id: "web-ui-demo",
+                        query: input
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Update UI based on decision
+                const decision = data.decision; // ALLOW, REDACT, BLOCK
+                decisionBadge.className = `badge ${decision}`;
+                decisionBadge.innerText = decision;
+                
+                latencyMetric.innerText = `Latency: ${data.latency_ms}ms`;
+
+                // Format terminal output
+                let outText = `[Prime Agent] Decision: ${decision}\n`;
+                if (data.reason) {
+                    outText += `[Reason] ${data.reason}\n`;
+                }
+                
+                outText += `\n[LLM Response] model=${data.model_used}\n`;
+                outText += `> ${data.response}\n\n`;
+                
+                outText += `[Audit Trace]\nID: ${data.audit_id}\n`;
+                outText += `Entities Found: ${data.entity_count}`;
+
+                terminalOutput.innerText = outText;
+
+            } catch (err) {
+                decisionBadge.className = 'badge BLOCK';
+                decisionBadge.innerText = 'ERROR';
+                terminalOutput.innerText = `[System Error]\nFailed to connect to Sentinel AI backend.\nEnsure the FastAPI server is running on the correct port.\n\nDetails: ${err.message}`;
+            } finally {
+                // Restore UI State
+                btnText.style.display = 'block';
+                btnLoader.style.display = 'none';
+                submitBtn.style.opacity = '1';
+                submitBtn.disabled = false;
+                resultArea.classList.add('active');
+            }
+        }
+        
+        // --- Chat Widget Logic ---
+        
+        function toggleChat() {
+            const chatWindow = document.getElementById('chatWindow');
+            chatWindow.classList.toggle('open');
+        }
+        
+        function handleChatKeypress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+        
+        async function sendChatMessage() {
+            const inputEl = document.getElementById('chatInput');
+            const message = inputEl.value.trim();
+            if (!message) return;
+            
+            const messagesContainer = document.getElementById('chatMessages');
+            
+            // Add user message to UI
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'message user';
+            userMsgDiv.innerText = message;
+            messagesContainer.appendChild(userMsgDiv);
+            
+            inputEl.value = '';
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Add typing indicator
+            const botTypingDiv = document.createElement('div');
+            botTypingDiv.className = 'message bot';
+            botTypingDiv.innerHTML = '<span style="opacity:0.5">Typing...</span>';
+            botTypingDiv.id = 'typingIndicator';
+            messagesContainer.appendChild(botTypingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            try {
+                const baseUrl = window.location.origin;
+                const response = await fetch(`${baseUrl}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                // Remove typing indicator and add response
+                const indicator = document.getElementById('typingIndicator');
+                if (indicator) indicator.remove();
+                
+                const botMsgDiv = document.createElement('div');
+                botMsgDiv.className = 'message bot';
+                botMsgDiv.innerText = data.response;
+                messagesContainer.appendChild(botMsgDiv);
+                
+            } catch (err) {
+                const indicator = document.getElementById('typingIndicator');
+                if (indicator) indicator.remove();
+                
+                const botMsgDiv = document.createElement('div');
+                botMsgDiv.className = 'message bot';
+                botMsgDiv.innerText = "Error connecting to the agent.";
+                messagesContainer.appendChild(botMsgDiv);
+            }
+            
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>

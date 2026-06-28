@@ -9,3 +9,5 @@ pytest==8.4.1
 httpx==0.28.1
 regex==2024.11.6
 groq==0.25.0
+cascadeflow==1.2.0
+hindsight-client==0.8.3

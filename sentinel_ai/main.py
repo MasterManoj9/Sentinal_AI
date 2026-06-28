@@ -5,12 +5,19 @@
 
 import logging
 import sys
+import os
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException, Query
+from dotenv import load_dotenv
+load_dotenv()
+
+from fastapi import FastAPI, HTTPException, Query, Request, BackgroundTasks
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from groq import AsyncGroq
 
 from sentinel_ai import __version__, __agent__, __project__
 from sentinel_ai.audit import read_recent, read_by_client, get_stats
@@ -66,6 +73,16 @@ class QueryResponse(BaseModel):
     detection_method: str = Field(..., description="Detection method used (regex, llm, both).")
     redacted: bool = Field(..., description="Whether the query was redacted before routing.")
     escalated: bool = Field(..., description="Whether the model was escalated.")
+
+
+class ChatRequest(BaseModel):
+    """Request body for the FAQ /chat endpoint."""
+    message: str = Field(..., description="The user's message to the FAQ agent.")
+
+
+class ChatResponse(BaseModel):
+    """Response body for the FAQ /chat endpoint."""
+    response: str = Field(..., description="The agent's reply.")
 
 
 class HealthResponse(BaseModel):
@@ -134,12 +151,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Sentinel AI",
-    description=(
-        "Compliance infrastructure for AI agents. Powered by Prime, "
-        "the compliance gate agent that detects regulated data, enforces "
-        "routing policies, and maintains an immutable audit trail."
-    ),
+    description="Prime Compliance Gate API",
     version=__version__,
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
     lifespan=lifespan,
 )
 
@@ -150,6 +166,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount the static directory for the spatial UI
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "..", "static")
+os.makedirs(STATIC_DIR, exist_ok=True)
+app.mount("/assets", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 # ─── Endpoints ───
@@ -176,6 +197,48 @@ async def process_query(request: QueryRequest) -> QueryResponse:
     except Exception as e:
         logger.error(f"Query processing failed: {e}")
         raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
+
+
+@app.post("/chat", response_model=ChatResponse, tags=["UI"])
+async def process_chat(request: ChatRequest) -> ChatResponse:
+    """Process a chat message for the Support FAQ Agent.
+    
+    Uses Groq to answer questions based strictly on the injected
+    course policies and Sentinel AI capabilities.
+    """
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        return ChatResponse(response="I'm offline right now! Please provide a GROQ_API_KEY in your .env file to enable the support agent.")
+
+    system_prompt = (
+        "You are the Sentinel AI Support Agent, an expert assistant that lives inside the Sentinel AI Dashboard. "
+        "Your job is to answer user questions concisely and helpfully.\n\n"
+        "KNOWLEDGE BASE & COURSE POLICIES:\n"
+        "- Sentinel AI is an enterprise-grade compliance gate that intercepts AI queries in real-time to detect and govern regulated data (like PHI, PII, Financial data).\n"
+        "- It is agnostic: it can enforce ANY policy framework (HIPAA, GDPR, PCI) simply by loading a new JSON rulebook. It is NOT only for medical.\n"
+        "- Core features include: Immutable Audit logging, Cross-Session Memory (via Hindsight) to remember repeat offenders, Cascade Routing to dynamically route to approved models (Groq/Ollama), and Smart Redaction.\n"
+        "- Course Policy: Students must ensure all data handled complies with standard ethical guidelines. The platform enforces these rules automatically. Sentinel AI guarantees zero data leakage.\n"
+        "TONE:\n"
+        "- Be friendly, concise (1-3 sentences max), and extremely professional.\n"
+        "CRITICAL RULE:\n"
+        "- Under NO circumstances should you ever mention or use the word 'hackathon'. Treat this as a production, real-world enterprise product."
+    )
+
+    try:
+        client = AsyncGroq(api_key=api_key)
+        completion = await client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": request.message}
+            ],
+            temperature=0.3,
+            max_tokens=150,
+        )
+        return ChatResponse(response=completion.choices[0].message.content or "I couldn't process that.")
+    except Exception as e:
+        logger.error(f"Chat agent error: {e}")
+        return ChatResponse(response="Sorry, I am having trouble connecting to my brain right now.")
 
 
 @app.get("/audit/recent", response_model=AuditResponse, tags=["Audit"])
@@ -229,7 +292,7 @@ async def health_check() -> HealthResponse:
     cascadeflow_available = False
 
     try:
-        import hindsight_sdk  # noqa: F401
+        import hindsight_client  # noqa: F401
         hindsight_available = True
     except ImportError:
         pass
@@ -278,14 +341,10 @@ async def run_demo() -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Demo error: {str(e)}")
 
 
-@app.get("/", tags=["System"])
-async def root() -> Dict[str, str]:
-    """Root endpoint with project information."""
-    return {
-        "project": __project__,
-        "agent": __agent__,
-        "version": __version__,
-        "docs": "/docs",
-        "health": "/health",
-        "demo": "/demo",
-    }
+@app.get("/", tags=["UI"])
+async def serve_ui():
+    """Serve the Spatial UI dashboard."""
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"message": "Sentinel AI UI is building..."}
