@@ -21,6 +21,9 @@
   <a href="#-api-reference">API Reference</a> •
   <a href="#-demo-scenarios">Demo Scenarios</a>
 </p>
+## 🚀 Live Demo
+
+**Application:** https://sentinal-ai-a8ig.onrender.com/
 
 ---
 
